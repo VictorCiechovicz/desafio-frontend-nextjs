@@ -1,9 +1,14 @@
 "use client";
 
+import { useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import type { LocalMessage } from "@/lib/api";
 import { useConversation } from "@/lib/hooks/useConversations";
-import { useMessages } from "@/lib/hooks/useMessages";
+import { messagesQueryKey, useMessages } from "@/lib/hooks/useMessages";
+import { useSendMessage } from "@/lib/hooks/useSendMessage";
 import { ChatHeader } from "./ChatHeader";
 import { ChatPanelSkeleton } from "./ChatPanelSkeleton";
+import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
 
 interface Props {
@@ -11,6 +16,8 @@ interface Props {
 }
 
 export function ChatPanel({ conversationId }: Props) {
+  const queryClient = useQueryClient();
+
   const { data: conversation, isFetching: isFetchingConversation } =
     useConversation(conversationId);
 
@@ -21,6 +28,32 @@ export function ChatPanel({ conversationId }: Props) {
     isFetching,
     refetch,
   } = useMessages(conversationId);
+
+  // O retry vive aqui (no orquestrador) porque precisa de duas operações
+  // coordenadas: limpar a mensagem antiga (que está com error=true) e disparar
+  // um novo envio com tempId novo. Manter no Composer obrigaria o Composer a
+  // conhecer o cache; manter na bolha acoplaria a UI ao react-query.
+  const retryMutation = useSendMessage(conversationId);
+
+  const handleRetry = useCallback(
+    (message: LocalMessage) => {
+      const draft = message.draftText ?? message.body;
+      if (!draft) return;
+
+      queryClient.setQueryData<LocalMessage[]>(
+        messagesQueryKey(conversationId),
+        (old) => (old ?? []).filter((m) => m.id !== message.id),
+      );
+
+      const tempId =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+      retryMutation.mutate({ text: draft, tempId });
+    },
+    [conversationId, queryClient, retryMutation],
+  );
 
   // O "Atualizando…" deve aparecer apenas em refetches do polling, nunca no
   // primeiro carregamento (que já mostra skeleton). Sem isso o usuário veria
@@ -53,15 +86,11 @@ export function ChatPanel({ conversationId }: Props) {
         ) : (messages?.length ?? 0) === 0 ? (
           <EmptyMessagesState />
         ) : (
-          <MessageList messages={messages ?? []} />
+          <MessageList messages={messages ?? []} onRetry={handleRetry} />
         )}
       </div>
 
-      {/* TODO(próxima task): substituir por <Composer conversationId={...} />
-          com envio + botão "Sugerir IA" + optimistic update. */}
-      <div className="flex h-16 shrink-0 items-center border-t border-neutral-200 bg-white px-3 text-xs text-neutral-400 md:px-4">
-        Composer (TODO)
-      </div>
+      <Composer conversationId={conversationId} />
     </section>
   );
 }

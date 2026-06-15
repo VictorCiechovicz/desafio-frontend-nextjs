@@ -36,6 +36,16 @@ export interface Message {
   createdAt: string;
 }
 
+// Mensagem "viva" no cache do react-query: pode estar em trânsito (pending),
+// ou ter falhado (error). draftText preserva o texto original para retry mesmo
+// se a UI mexer noutros campos. Como estende Message, qualquer consumidor que
+// só lê os campos de Message segue funcionando sem cast.
+export interface LocalMessage extends Message {
+  pending?: boolean;
+  error?: boolean;
+  draftText?: string;
+}
+
 export interface Agent {
   id: string;
   name: string;

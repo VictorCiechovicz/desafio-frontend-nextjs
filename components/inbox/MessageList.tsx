@@ -1,13 +1,14 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef } from "react";
-import type { Message } from "@/lib/api";
+import type { LocalMessage } from "@/lib/api";
 import { dayKey, formatDayDivider } from "@/lib/format";
 import { MessageBubble } from "./MessageBubble";
 import { MessageDayDivider } from "./MessageDayDivider";
 
 interface Props {
-  messages: Message[];
+  messages: LocalMessage[];
+  onRetry?: (message: LocalMessage) => void;
 }
 
 // Margem (px) a partir do final da lista dentro da qual ainda consideramos que
@@ -19,10 +20,10 @@ const STICK_TO_BOTTOM_THRESHOLD_PX = 80;
 interface DayGroup {
   key: string;
   label: string;
-  messages: Message[];
+  messages: LocalMessage[];
 }
 
-function groupByDay(messages: Message[]): DayGroup[] {
+function groupByDay(messages: LocalMessage[]): DayGroup[] {
   const groups: DayGroup[] = [];
   for (const msg of messages) {
     const key = dayKey(msg.createdAt);
@@ -36,7 +37,7 @@ function groupByDay(messages: Message[]): DayGroup[] {
   return groups;
 }
 
-export function MessageList({ messages }: Props) {
+export function MessageList({ messages, onRetry }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const previousLengthRef = useRef(0);
   const hasMountedRef = useRef(false);
@@ -81,7 +82,7 @@ export function MessageList({ messages }: Props) {
         <Fragment key={group.key}>
           <MessageDayDivider label={group.label} />
           {group.messages.map((message) => (
-            <MessageBubble key={message.id} message={message} />
+            <MessageBubble key={message.id} message={message} onRetry={onRetry} />
           ))}
         </Fragment>
       ))}
