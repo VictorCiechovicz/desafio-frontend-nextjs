@@ -24,6 +24,31 @@ export function formatConversationTimestamp(iso: string, now: Date = new Date())
   return format(date, "dd/MM/yyyy");
 }
 
+// Separador exibido no meio da lista de mensagens quando o dia muda.
+// Hoje/Ontem em texto humano; mais antigo cai pra data completa em pt-BR.
+export function formatDayDivider(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+
+  if (isToday(date)) return "Hoje";
+  if (isYesterday(date)) return "Ontem";
+  return format(date, "dd/MM/yyyy");
+}
+
+// Hora curta da bolha (HH:mm). Centralizado pra manter consistência caso o formato mude.
+export function formatMessageTime(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return format(date, "HH:mm");
+}
+
+// Chave estável de dia (YYYY-MM-DD) usada pra agrupar mensagens. Não depende de locale.
+export function dayKey(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return format(date, "yyyy-MM-dd");
+}
+
 export function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";

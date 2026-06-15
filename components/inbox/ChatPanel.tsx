@@ -1,24 +1,92 @@
 "use client";
 
-// Client porque a tela de chat vai precisar de useQuery, useMutation (envio otimista),
-// polling, foco no input e scroll automático.
-export function ChatPanel({ conversationId }: { conversationId: string }) {
+import { useConversation } from "@/lib/hooks/useConversations";
+import { useMessages } from "@/lib/hooks/useMessages";
+import { ChatHeader } from "./ChatHeader";
+import { ChatPanelSkeleton } from "./ChatPanelSkeleton";
+import { MessageList } from "./MessageList";
+
+interface Props {
+  conversationId: string;
+}
+
+export function ChatPanel({ conversationId }: Props) {
+  const { data: conversation, isFetching: isFetchingConversation } =
+    useConversation(conversationId);
+
+  const {
+    data: messages,
+    isPending,
+    isError,
+    isFetching,
+    refetch,
+  } = useMessages(conversationId);
+
+  // O "Atualizando…" deve aparecer apenas em refetches do polling, nunca no
+  // primeiro carregamento (que já mostra skeleton). Sem isso o usuário veria
+  // os dois indicadores ao mesmo tempo.
+  const showRefreshIndicator = (isFetching && !isPending) || isFetchingConversation;
+
   return (
     <section
-      aria-label={`Conversa ${conversationId}`}
-      className="flex h-full flex-1 flex-col bg-neutral-50"
+      aria-label={
+        conversation ? `Conversa com ${conversation.contactName}` : "Carregando conversa"
+      }
+      className="flex h-full min-h-0 flex-1 flex-col"
     >
-      <div className="flex h-12 shrink-0 items-center border-b border-neutral-200 bg-white px-4">
-        <h2 className="text-sm font-semibold text-neutral-900">
-          {/* TODO: nome do contato vindo da conversa selecionada */}
-          Chat de {conversationId}
-        </h2>
+      <ChatHeader conversation={conversation} isFetching={showRefreshIndicator} />
+
+      {/* Background tipo "papel de parede" do WhatsApp clássico, diferenciando o
+          painel do branco da sidebar. Usamos cor sólida + leve gradiente. */}
+      <div
+        className="flex min-h-0 flex-1 flex-col"
+        style={{
+          backgroundColor: "#E5DDD5",
+          backgroundImage:
+            "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35) 0, transparent 40%), radial-gradient(circle at 80% 80%, rgba(0,0,0,0.04) 0, transparent 45%)",
+        }}
+      >
+        {isPending ? (
+          <ChatPanelSkeleton />
+        ) : isError ? (
+          <ErrorState onRetry={() => refetch()} />
+        ) : (messages?.length ?? 0) === 0 ? (
+          <EmptyMessagesState />
+        ) : (
+          <MessageList messages={messages ?? []} />
+        )}
       </div>
 
-      <div className="flex flex-1 items-center justify-center text-sm text-neutral-400">
-        {/* TODO: lista de mensagens (bolhas in/out) + composer + botão sugerir IA */}
-        Chat (TODO)
+      {/* TODO(próxima task): substituir por <Composer conversationId={...} />
+          com envio + botão "Sugerir IA" + optimistic update. */}
+      <div className="flex h-16 shrink-0 items-center border-t border-neutral-200 bg-white px-3 text-xs text-neutral-400 md:px-4">
+        Composer (TODO)
       </div>
     </section>
+  );
+}
+
+function ErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 text-center">
+      <p className="mb-3 text-sm text-neutral-800">
+        Não foi possível carregar as mensagens.
+      </p>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="rounded-md bg-[#25D366] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#1ebe5a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]/40"
+      >
+        Tentar novamente
+      </button>
+    </div>
+  );
+}
+
+function EmptyMessagesState() {
+  return (
+    <div className="flex flex-1 items-center justify-center px-6 py-10 text-center">
+      <p className="text-sm text-neutral-600">Nenhuma mensagem ainda.</p>
+    </div>
   );
 }

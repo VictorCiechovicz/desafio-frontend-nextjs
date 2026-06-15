@@ -16,3 +16,18 @@ export function useConversations() {
     refetchInterval: 5_000,
   });
 }
+
+// Reusa o cache de useConversations() pra evitar uma request extra a
+// /conversations/:id (que nem existe na API). select() roda no client e extrai a
+// conversa atual da lista já em memória — assim o header do chat aparece
+// instantaneamente quando o usuário clica na sidebar, e ainda funciona via deep
+// link (entra direto em /c/:id) assim que a lista é carregada.
+export function useConversation(conversationId: string | undefined) {
+  return useQuery<Conversation[], Error, Conversation | undefined>({
+    queryKey: [...conversationsQueryKey],
+    queryFn: getConversations,
+    refetchInterval: 5_000,
+    enabled: Boolean(conversationId),
+    select: (list) => list.find((c) => c.id === conversationId),
+  });
+}
