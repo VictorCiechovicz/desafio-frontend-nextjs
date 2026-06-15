@@ -22,7 +22,7 @@ export function ConversationList() {
     <aside
       aria-label="Lista de conversas"
       data-active={activeId ? "true" : "false"}
-      className="flex h-full w-full flex-col border-r border-neutral-200 bg-white data-[active=true]:hidden md:flex md:w-[360px] md:shrink-0"
+      className="flex h-full w-full flex-col border-r border-neutral-200 bg-white data-[active=true]:hidden md:flex md:w-[360px] md:shrink-0 md:data-[active=true]:flex"
     >
       <div className="flex shrink-0 flex-col gap-3 border-b border-neutral-200 px-3 py-3">
         <div className="flex h-6 items-center justify-between">
