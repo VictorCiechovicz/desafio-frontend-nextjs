@@ -98,9 +98,42 @@ mobile.
 - **Sidebar**: 5s (mensagens chegando em conversas que não estão abertas)
 - **Chat aberto**: 3s (foco do atendente — precisa parecer mais "vivo")
 
-Polling foi a escolha porque (a) o enunciado considera suficiente, (b) o backend
-fornecido é REST puro. WebSocket / SSE seriam evolução natural; ver
-"O que faria com mais tempo".
+Considerei SSE pra deixar o chat em tempo real, mas o backend fornecido roda em
+Lambda + API Gateway HTTP API — a resposta é buffered, então `text/event-stream`
+não chega em pedaços no cliente. Em produção real, resolveria trocando o
+endpoint pra Lambda Function URL com `InvokeMode: RESPONSE_STREAM` (response
+streaming, liberado em 2023) — aí o cliente nem precisa mudar. Adicionar o
+código de SSE agora rodando só no servidor local seria complexidade que não
+executa contra o backend dado; preferi investir o tempo em prefetch, 404
+handling e nos testes listados em "O que faria com mais tempo".
+
+### Prefetch das mensagens ao hover na sidebar
+`ConversationListItem` chama `queryClient.prefetchQuery` no `onMouseEnter` e
+no `onFocus` (cobre teclado, não só mouse). `staleTime: 10_000` evita refetch
+se o usuário hover-clica em ms; se demorar mais de 10s, a query é considerada
+stale e o chat refaz o fetch normal. O handler é estável (`useCallback`) — sem
+isso o re-render do polling de 5s recriaria a referência e o listener teria
+churn. Guard `if (isActive) return` evita prefetch da conversa já aberta
+(cache dela está sendo atualizado pelo polling — duplicar é desperdício).
+
+### 404 quando a conversa não existe
+`app/(inbox)/c/[conversationId]/not-found.tsx` é renderizado quando o
+`ChatPanel` chama `notFound()`. A regra é específica pra evitar falso positivo
+no carregamento inicial:
+
+```ts
+if (
+  hasLoadedConversations &&       // useConversations.isSuccess
+  conversationsList &&             // dado presente
+  !conversationsList.some((c) => c.id === conversationId)  // id ausente
+) {
+  notFound();
+}
+```
+
+Sem o `isSuccess`, o primeiro render (lista ainda undefined) cairia em 404
+indevidamente. A `queryKey` é a mesma de `useConversation`, então é zero
+request extra — só leitura do cache.
 
 ### `useConversation(id)` reusa o cache de `useConversations`
 A API não tem `GET /conversations/:id`. Em vez de fazer uma request extra, o
@@ -199,16 +232,17 @@ da árvore continuam aparecendo.
 - **Animações sutis** de entrada das bolhas (Framer Motion)
 
 ### Robustez
-- **404 handling** quando `/c/:id` aponta pra conversa inexistente
 - **Reconectar** quando a aba volta do background (`refetchOnWindowFocus`
   seletivo nas queries críticas)
 - **Toast system** próprio (hoje é toast inline simples no Composer)
 - **i18n** estrutural (strings hardcoded em pt-BR hoje)
 
 ### Real-time
-- Substituir o polling por **SSE** ou **WebSocket** quando o backend expuser.
-  A camada de abstração já existe — só trocar o `useQuery` polling por um hook
-  que escuta o stream e chama `queryClient.setQueryData`.
+- **SSE no Lambda**: trocar o endpoint pra Lambda Function URL com
+  `InvokeMode: RESPONSE_STREAM` (response streaming, liberado em 2023) —
+  aí o `text/event-stream` flui em prod e o cliente nem precisa mudar.
+- **WebSocket** se eventualmente precisar de canal bidirecional contínuo
+  (ex.: typing indicator, presence, read receipts em massa).
 
 ### Testes
 - **Unit**: `format.ts`, hooks via RTL + MSW
@@ -217,7 +251,6 @@ da árvore continuam aparecendo.
 ### Performance
 - **Virtualização** da lista de mensagens (TanStack Virtual) se o histórico
   crescer
-- **Prefetch** das mensagens ao hover no item da sidebar
 - **Lazy load** do ChatPanel
 
 ### Tooling
@@ -237,3 +270,5 @@ da árvore continuam aparecendo.
 | Sugerir IA | `lib/hooks/useSuggestReply.ts` + `components/inbox/Composer.tsx` |
 | Loading / erro / vazio + a11y | em cada componente; padrão sr-only + roles ARIA |
 | Polling | `useConversations` (5s), `useMessages` (3s) |
+| Prefetch ao hover | `ConversationListItem` (`onMouseEnter`/`onFocus` + `prefetchQuery`) |
+| 404 de conversa | `app/(inbox)/c/[conversationId]/not-found.tsx` + `notFound()` no `ChatPanel` |

@@ -1,8 +1,11 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import type { Conversation } from "@/lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { getMessages, type Conversation } from "@/lib/api";
+import { messagesQueryKey } from "@/lib/hooks/useMessages";
 import { formatConversationTimestamp, getInitials } from "@/lib/format";
 
 interface Props {
@@ -10,16 +13,41 @@ interface Props {
   isActive: boolean;
 }
 
+// staleTime do prefetch: 10s. Se o usuário passa o mouse e clica logo depois,
+// a query é considerada fresca e a tela do chat já abre com dados — sem
+// segundo fetch. Maior que isso arriscaria mostrar mensagens defasadas; menor
+// anularia o benefício do prefetch em hovers próximos do click.
+const PREFETCH_STALE_TIME_MS = 10_000;
+
 export function ConversationListItem({ conversation, isActive }: Props) {
   const { id, contactName, avatarColor, unread, lastMessage, lastMessageAt } = conversation;
   const initials = getInitials(contactName);
   const timestamp = formatConversationTimestamp(lastMessageAt);
   const hasUnread = unread > 0;
 
+  const queryClient = useQueryClient();
+
+  // onMouseEnter + onFocus cobrem mouse e teclado (Tab). Sem onFocus a
+  // navegação por teclado não se beneficia do prefetch — usuário power-user
+  // de inbox quase sempre navega assim. Handler estável (useCallback) pra
+  // não invalidar listeners em re-renders do polling.
+  const handlePrefetch = useCallback(() => {
+    // Não vale prefetch do item já aberto: o cache da conversa ativa está
+    // sendo atualizado pelo polling/SSE e duplicar request é desperdício.
+    if (isActive) return;
+    queryClient.prefetchQuery({
+      queryKey: messagesQueryKey(id),
+      queryFn: () => getMessages(id),
+      staleTime: PREFETCH_STALE_TIME_MS,
+    });
+  }, [id, isActive, queryClient]);
+
   return (
     <Link
       href={`/c/${id}`}
       aria-current={isActive ? "page" : undefined}
+      onMouseEnter={handlePrefetch}
+      onFocus={handlePrefetch}
       className={clsx(
         "flex items-center gap-3 border-l-2 px-3 py-3 transition-colors",
         "hover:bg-muted focus:outline-none focus-visible:bg-muted",

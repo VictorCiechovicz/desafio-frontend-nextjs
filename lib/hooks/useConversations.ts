@@ -22,11 +22,16 @@ export function useConversations() {
 // conversa atual da lista já em memória — assim o header do chat aparece
 // instantaneamente quando o usuário clica na sidebar, e ainda funciona via deep
 // link (entra direto em /c/:id) assim que a lista é carregada.
+//
+// Importante: NÃO declaramos refetchInterval aqui. A sidebar (useConversations)
+// já está montada no layout e compartilha a mesma queryKey — o react-query
+// agrega os observers e dispara um único polling de 5s. Declarar de novo aqui
+// não acelera nada e confunde (qual intervalo "ganha"? O menor — mas ficaria
+// implícito). Mantemos o polling em um lugar só: o hook da lista.
 export function useConversation(conversationId: string | undefined) {
   return useQuery<Conversation[], Error, Conversation | undefined>({
     queryKey: [...conversationsQueryKey],
     queryFn: getConversations,
-    refetchInterval: 5_000,
     enabled: Boolean(conversationId),
     select: (list) => list.find((c) => c.id === conversationId),
   });

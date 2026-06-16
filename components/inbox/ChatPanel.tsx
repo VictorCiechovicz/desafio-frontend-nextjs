@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback } from "react";
+import { notFound } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import type { LocalMessage } from "@/lib/api";
-import { useConversation } from "@/lib/hooks/useConversations";
+import { useConversation, useConversations } from "@/lib/hooks/useConversations";
 import { useDelayedFlag } from "@/lib/hooks/useDelayedFlag";
 import { messagesQueryKey, useMessages } from "@/lib/hooks/useMessages";
 import { useSendMessage } from "@/lib/hooks/useSendMessage";
@@ -18,6 +19,19 @@ interface Props {
 
 export function ChatPanel({ conversationId }: Props) {
   const queryClient = useQueryClient();
+
+  // Fonte da verdade pra existência da conversa: a lista (a API não tem
+  // GET /conversations/:id). Só consideramos "não existe" depois que a lista
+  // carregou com sucesso (isSuccess) — durante o primeiro fetch, undefined
+  // é estado intermediário, não 404.
+  const { data: conversationsList, isSuccess: hasLoadedConversations } = useConversations();
+  if (
+    hasLoadedConversations &&
+    conversationsList &&
+    !conversationsList.some((c) => c.id === conversationId)
+  ) {
+    notFound();
+  }
 
   const { data: conversation, isFetching: isFetchingConversation } =
     useConversation(conversationId);
