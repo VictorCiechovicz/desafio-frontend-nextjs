@@ -22,9 +22,39 @@ Outros scripts:
 npm run build       # build de produção
 npm run typecheck   # tsc --noEmit
 npm run lint        # eslint
+npm test            # unit + hooks (Vitest)
+npm run test:watch  # Vitest em watch mode
+npm run test:e2e    # E2E (Playwright)
 ```
 
 Há uma rota `/health` pra debug — checa se a API responde.
+
+---
+
+## 🧪 Testes
+
+A suíte é proposital: cobertura **mínima viável** que prova o padrão sem virar
+manutenção. Foram 3 frentes:
+
+- **Unit (`tests/unit/`)** — `lib/format.ts` (pure functions): iniciais,
+  formatação de timestamps, divisores de dia, casos de borda.
+- **Hooks (`tests/hooks/`)** — `useSendMessage` com **MSW** (mock service
+  worker) cobrindo o tripé do optimistic update: bolha aparece instantânea
+  (`pending=true`), é substituída pela mensagem real em sucesso, e
+  **permanece** com `error=true` quando o POST falha — regra de produto
+  documentada no `onError` do hook (rollback total destruiria o texto que o
+  usuário acabou de digitar).
+- **E2E (`tests/e2e/`)** — Playwright executando o golden path real (`/` →
+  abrir conversa → digitar → enviar → ver a bolha) contra a app Next + server
+  local in-memory subindo via `webServer` da config.
+
+```bash
+npm test            # Vitest (unit + hooks) — ~3s
+npm run test:e2e    # Playwright (sobe server local + Next dev)
+```
+
+Configuração: `vitest.config.ts`, `vitest.setup.ts`, `playwright.config.ts`,
+`tests/msw/server.ts`.
 
 ---
 
@@ -235,9 +265,20 @@ da árvore continuam aparecendo.
 - **SSE ou WebSocket** quando o backend expuser. A camada de queries já está
   pronta — basta um hook que escute o stream e chame `queryClient.setQueryData`.
 
-### Testes
-- **Unit**: `format.ts`, hooks via RTL + MSW
-- **E2E**: Playwright cobrindo golden path + erro de envio + retry + IA
+### Mais cobertura de testes
+A base já está montada (Vitest + RTL + MSW + Playwright — ver seção "Testes"
+acima). Com mais tempo eu adicionaria:
+
+- **Componentes**: `ConversationList` (busca filtra, vazio, erro com retry),
+  `Composer` (Enter envia, Shift+Enter quebra linha, sugestão IA preenchendo
+  textarea, badge mock/fallback), `MessageList` (agrupamento por dia, stick
+  to bottom).
+- **Hooks restantes**: `useSuggestReply` (mock vs openai source), `useMessages`
+  (polling), `useConversation(id)` reusando cache da lista.
+- **E2E**: erro de rede → bolha com retry → reenviar → sucesso; navegação por
+  teclado; fluxo IA com `mock-fallback`.
+- **Acessibilidade**: integração com `@axe-core/playwright` pra varredura
+  automática.
 
 ### Performance
 - **Virtualização** da lista de mensagens (TanStack Virtual) se o histórico
