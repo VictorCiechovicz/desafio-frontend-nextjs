@@ -17,15 +17,15 @@ const LABEL: Record<Message["status"], string> = {
 };
 
 // Ícones inline (sem dep extra). "sent" = 1 check; "delivered"/"read" = 2 checks.
-// "read" muda a cor pra azul WhatsApp (#34B7F1). Quando pending, troca pelo ícone
-// de relógio (mesmo padrão visual do WhatsApp pra mensagens em trânsito).
+// "read" muda a cor pro azul WhatsApp (token --status-read). Quando pending, troca
+// pelo ícone de relógio (mesmo padrão visual do WhatsApp pra mensagens em trânsito).
 export function ChatMessageStatus({ status, pending }: Props) {
   if (pending) {
     return (
       <span
         role="img"
         aria-label="Enviando"
-        className="inline-flex shrink-0 items-center text-neutral-400"
+        className="inline-flex shrink-0 items-center text-muted-foreground"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -54,7 +54,7 @@ export function ChatMessageStatus({ status, pending }: Props) {
       aria-label={LABEL[status]}
       className={clsx(
         "inline-flex shrink-0 items-center",
-        isRead ? "text-[#34B7F1]" : "text-neutral-500",
+        isRead ? "text-status-read" : "text-muted-foreground",
       )}
     >
       <svg

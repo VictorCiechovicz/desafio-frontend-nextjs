@@ -8,7 +8,7 @@ export function ConversationListEmpty({ variant, query }: Props) {
     <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 text-center">
       <span
         aria-hidden
-        className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100 text-neutral-400"
+        className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -33,12 +33,12 @@ export function ConversationListEmpty({ variant, query }: Props) {
           )}
         </svg>
       </span>
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-muted-foreground">
         {variant === "no-conversations" ? (
           "Nenhuma conversa ainda"
         ) : (
           <>
-            Nenhum resultado para <span className="font-medium text-neutral-700">&ldquo;{query}&rdquo;</span>
+            Nenhum resultado para <span className="font-medium text-foreground">&ldquo;{query}&rdquo;</span>
           </>
         )}
       </p>

@@ -22,9 +22,9 @@ export function ConversationListItem({ conversation, isActive }: Props) {
       aria-current={isActive ? "page" : undefined}
       className={clsx(
         "flex items-center gap-3 border-l-2 px-3 py-3 transition-colors",
-        "hover:bg-neutral-50 focus:outline-none focus-visible:bg-neutral-100",
+        "hover:bg-muted focus:outline-none focus-visible:bg-muted",
         isActive
-          ? "border-l-[#25D366] bg-neutral-100"
+          ? "border-l-primary bg-muted"
           : "border-l-transparent",
       )}
     >
@@ -41,7 +41,7 @@ export function ConversationListItem({ conversation, isActive }: Props) {
           <p
             className={clsx(
               "truncate text-sm",
-              hasUnread ? "font-semibold text-neutral-900" : "font-medium text-neutral-900",
+              hasUnread ? "font-semibold text-foreground" : "font-medium text-foreground",
             )}
           >
             {contactName}
@@ -50,7 +50,7 @@ export function ConversationListItem({ conversation, isActive }: Props) {
             <span
               className={clsx(
                 "shrink-0 text-[11px]",
-                hasUnread ? "text-[#25D366]" : "text-neutral-400",
+                hasUnread ? "text-primary" : "text-muted-foreground",
               )}
             >
               {timestamp}
@@ -62,7 +62,7 @@ export function ConversationListItem({ conversation, isActive }: Props) {
           <p
             className={clsx(
               "truncate text-xs",
-              hasUnread ? "text-neutral-700" : "text-neutral-500",
+              hasUnread ? "text-foreground" : "text-muted-foreground",
             )}
           >
             {lastMessage}
@@ -70,7 +70,7 @@ export function ConversationListItem({ conversation, isActive }: Props) {
           {hasUnread && (
             <span
               aria-label={`${unread} ${unread === 1 ? "não lida" : "não lidas"}`}
-              className="inline-flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-[#25D366] px-1.5 text-[11px] font-semibold text-white"
+              className="inline-flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground"
             >
               {unread > 99 ? "99+" : unread}
             </span>

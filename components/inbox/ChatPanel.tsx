@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { LocalMessage } from "@/lib/api";
 import { useConversation } from "@/lib/hooks/useConversations";
+import { useDelayedFlag } from "@/lib/hooks/useDelayedFlag";
 import { messagesQueryKey, useMessages } from "@/lib/hooks/useMessages";
 import { useSendMessage } from "@/lib/hooks/useSendMessage";
 import { ChatHeader } from "./ChatHeader";
@@ -58,7 +59,13 @@ export function ChatPanel({ conversationId }: Props) {
   // O "Atualizando…" deve aparecer apenas em refetches do polling, nunca no
   // primeiro carregamento (que já mostra skeleton). Sem isso o usuário veria
   // os dois indicadores ao mesmo tempo.
-  const showRefreshIndicator = (isFetching && !isPending) || isFetchingConversation;
+  //
+  // O debounce (useDelayedFlag) evita o flicker do polling de 3s: em rede
+  // saudável o refetch termina antes do delay e o indicador nem aparece.
+  // Só fica visível quando o fetch realmente atrasa — que é o caso em que
+  // o feedback é útil pro atendente.
+  const isRefreshing = (isFetching && !isPending) || isFetchingConversation;
+  const showRefreshIndicator = useDelayedFlag(isRefreshing);
 
   return (
     <section
@@ -70,15 +77,8 @@ export function ChatPanel({ conversationId }: Props) {
       <ChatHeader conversation={conversation} isFetching={showRefreshIndicator} />
 
       {/* Background tipo "papel de parede" do WhatsApp clássico, diferenciando o
-          painel do branco da sidebar. Usamos cor sólida + leve gradiente. */}
-      <div
-        className="flex min-h-0 flex-1 flex-col"
-        style={{
-          backgroundColor: "#E5DDD5",
-          backgroundImage:
-            "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35) 0, transparent 40%), radial-gradient(circle at 80% 80%, rgba(0,0,0,0.04) 0, transparent 45%)",
-        }}
-      >
+          painel do fundo da sidebar. Cor sólida via token (--chat-bg) cobre light/dark. */}
+      <div className="flex min-h-0 flex-1 flex-col bg-chat-bg">
         {isPending ? (
           <ChatPanelSkeleton />
         ) : isError ? (
@@ -98,13 +98,13 @@ export function ChatPanel({ conversationId }: Props) {
 function ErrorState({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 text-center">
-      <p className="mb-3 text-sm text-neutral-800">
+      <p className="mb-3 text-sm text-foreground">
         Não foi possível carregar as mensagens.
       </p>
       <button
         type="button"
         onClick={onRetry}
-        className="rounded-md bg-[#25D366] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#1ebe5a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]/40"
+        className="rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
       >
         Tentar novamente
       </button>
@@ -115,7 +115,7 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
 function EmptyMessagesState() {
   return (
     <div className="flex flex-1 items-center justify-center px-6 py-10 text-center">
-      <p className="text-sm text-neutral-600">Nenhuma mensagem ainda.</p>
+      <p className="text-sm text-muted-foreground">Nenhuma mensagem ainda.</p>
     </div>
   );
 }

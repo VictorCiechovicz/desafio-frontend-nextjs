@@ -25,7 +25,7 @@ export function ChatPanelSkeleton() {
             className={clsx(
               "h-10 animate-pulse rounded-lg",
               row.width,
-              row.side === "out" ? "bg-[#DCF8C6]/70" : "bg-white",
+              row.side === "out" ? "bg-bubble-out/70" : "bg-card",
             )}
           />
         </div>

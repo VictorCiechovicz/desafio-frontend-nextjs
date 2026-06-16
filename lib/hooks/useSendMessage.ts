@@ -15,7 +15,6 @@ interface SendVariables {
 
 interface MutationContext {
   optimisticId: string;
-  previousMessages: LocalMessage[] | undefined;
 }
 
 export function useSendMessage(conversationId: string) {
@@ -36,8 +35,6 @@ export function useSendMessage(conversationId: string) {
       // e reaparecer. cancel marca as in-flight como obsoletas.
       await queryClient.cancelQueries({ queryKey });
 
-      const previousMessages = queryClient.getQueryData<LocalMessage[]>(queryKey);
-
       const optimistic: LocalMessage = {
         id: optimisticId,
         direction: "out",
@@ -53,12 +50,12 @@ export function useSendMessage(conversationId: string) {
         optimistic,
       ]);
 
-      return { optimisticId, previousMessages };
+      return { optimisticId };
     },
 
     // onError: NÃO removemos a mensagem — preservamos no DOM com error=true para
-    // o usuário poder retentar. Rollback total (previousMessages) sumiria com o
-    // que ele acabou de digitar, UX pior.
+    // o usuário poder retentar. Rollback total sumiria com o texto que ele
+    // acabou de digitar, UX pior.
     onError: (_err, _vars, context) => {
       if (!context) return;
       queryClient.setQueryData<LocalMessage[]>(queryKey, (old) =>

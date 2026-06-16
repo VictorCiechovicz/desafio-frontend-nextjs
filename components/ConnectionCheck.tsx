@@ -8,19 +8,19 @@ export function ConnectionCheck() {
   const conversations = useQuery({ queryKey: ["conversations"], queryFn: getConversations });
 
   if (me.isLoading || conversations.isLoading) {
-    return <p className="mt-2 text-sm text-neutral-500">Conectando à API…</p>;
+    return <p className="mt-2 text-sm text-muted-foreground">Conectando à API…</p>;
   }
 
   if (me.isError || conversations.isError) {
     return (
-      <p className="mt-2 text-sm text-red-600">
+      <p className="mt-2 text-sm text-red-600 dark:text-red-400">
         Não consegui conectar. Confira <code>NEXT_PUBLIC_API_URL</code> no seu <code>.env.local</code>.
       </p>
     );
   }
 
   return (
-    <p className="mt-2 text-sm text-green-700">
+    <p className="mt-2 text-sm text-green-700 dark:text-green-400">
       ✓ Conectado como <strong>{me.data?.name}</strong> — {conversations.data?.length} conversas carregadas.
     </p>
   );

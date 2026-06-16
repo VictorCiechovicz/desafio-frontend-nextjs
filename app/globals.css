@@ -1,12 +1,73 @@
 @import "tailwindcss";
 
+/* HSL puro (sem hsl()) habilita opacity modifiers do Tailwind tipo bg-primary/40. */
 :root {
-  --background: #ffffff;
-  --foreground: #0a0a0a;
+  --background: 0 0% 100%;
+  --foreground: 0 0% 4%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 4%;
+
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 45%;
+
+  --border: 0 0% 90%;
+
+  --primary: 142 70% 49%;
+  --primary-foreground: 0 0% 100%;
+
+  --bubble-out: 88 64% 87%;
+  --bubble-out-foreground: 0 0% 4%;
+
+  --status-read: 199 86% 57%;
+
+  --chat-bg: 33 24% 87%;
+
+  --ring: 142 70% 49%;
+}
+
+.dark {
+  --background: 222 14% 11%;
+  --foreground: 0 0% 95%;
+
+  --card: 222 14% 13%;
+  --card-foreground: 0 0% 95%;
+
+  --muted: 222 14% 16%;
+  --muted-foreground: 0 0% 65%;
+
+  --border: 222 14% 22%;
+
+  --primary: 142 70% 49%;
+  --primary-foreground: 0 0% 100%;
+
+  --bubble-out: 168 64% 18%;
+  --bubble-out-foreground: 0 0% 95%;
+
+  --status-read: 199 86% 57%;
+
+  --chat-bg: 222 14% 7%;
+
+  --ring: 142 70% 49%;
+}
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-border: hsl(var(--border));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-bubble-out: hsl(var(--bubble-out));
+  --color-bubble-out-foreground: hsl(var(--bubble-out-foreground));
+  --color-status-read: hsl(var(--status-read));
+  --color-chat-bg: hsl(var(--chat-bg));
+  --color-ring: hsl(var(--ring));
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }

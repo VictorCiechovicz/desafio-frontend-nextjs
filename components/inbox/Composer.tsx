@@ -119,10 +119,10 @@ export function Composer({ conversationId }: Props) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="shrink-0 border-t border-neutral-200 bg-white px-3 py-2 md:px-4 md:py-3"
+      className="shrink-0 border-t border-border bg-card px-3 py-2 md:px-4 md:py-3"
     >
       {suggestionSource && (
-        <div className="mb-1.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-amber-600">
+        <div className="mb-1.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-amber-600 dark:text-amber-400">
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden />
           <span>Sugestão {suggestionSource === "mock-fallback" ? "fallback" : "mock"}</span>
         </div>
@@ -135,8 +135,8 @@ export function Composer({ conversationId }: Props) {
           disabled={isSuggesting}
           aria-label="Sugerir resposta com IA"
           className={clsx(
-            "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-3 text-xs font-semibold text-neutral-700 transition",
-            "hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]/40",
+            "inline-flex h-10 shrink-0 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-semibold text-foreground transition",
+            "hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
             "disabled:cursor-not-allowed disabled:opacity-60",
           )}
         >
@@ -180,7 +180,7 @@ export function Composer({ conversationId }: Props) {
             rows={1}
             aria-label="Mensagem"
             aria-describedby={helperId}
-            className="w-full resize-none rounded-2xl border border-neutral-200 bg-white px-4 py-2 text-sm leading-relaxed text-neutral-900 placeholder:text-neutral-400 focus:border-[#25D366] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]/40"
+            className="w-full resize-none rounded-2xl border border-border bg-card px-4 py-2 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
             style={{ maxHeight: MAX_TEXTAREA_HEIGHT_PX }}
           />
           <span id={helperId} className="sr-only">
@@ -193,9 +193,9 @@ export function Composer({ conversationId }: Props) {
           disabled={!canSend}
           aria-label="Enviar mensagem"
           className={clsx(
-            "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white transition",
-            "hover:bg-[#1ebe5a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#25D366]/40",
-            "disabled:cursor-not-allowed disabled:bg-neutral-300",
+            "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition",
+            "hover:bg-primary/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+            "disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground",
           )}
         >
           <svg
@@ -219,7 +219,7 @@ export function Composer({ conversationId }: Props) {
         <p
           role="status"
           aria-live="polite"
-          className="mt-2 text-xs text-red-600"
+          className="mt-2 text-xs text-red-600 dark:text-red-400"
         >
           {errorMessage}
         </p>
