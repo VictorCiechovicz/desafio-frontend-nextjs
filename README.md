@@ -98,14 +98,9 @@ mobile.
 - **Sidebar**: 5s (mensagens chegando em conversas que não estão abertas)
 - **Chat aberto**: 3s (foco do atendente — precisa parecer mais "vivo")
 
-Considerei SSE pra deixar o chat em tempo real, mas o backend fornecido roda em
-Lambda + API Gateway HTTP API — a resposta é buffered, então `text/event-stream`
-não chega em pedaços no cliente. Em produção real, resolveria trocando o
-endpoint pra Lambda Function URL com `InvokeMode: RESPONSE_STREAM` (response
-streaming, liberado em 2023) — aí o cliente nem precisa mudar. Adicionar o
-código de SSE agora rodando só no servidor local seria complexidade que não
-executa contra o backend dado; preferi investir o tempo em prefetch, 404
-handling e nos testes listados em "O que faria com mais tempo".
+Polling foi a escolha porque (a) o enunciado considera suficiente, (b) o backend
+fornecido é REST puro. Real-time é evolução natural — ver "O que faria com mais
+tempo".
 
 ### Prefetch das mensagens ao hover na sidebar
 `ConversationListItem` chama `queryClient.prefetchQuery` no `onMouseEnter` e
@@ -228,7 +223,6 @@ da árvore continuam aparecendo.
 - **Atalhos de teclado** (J/K navegação, `/` foca busca, Esc volta no mobile)
 - **Anexos** (imagens, áudios) se o backend expor `attachments[]`
 - **Indicador "digitando…"** se o backend expor — exige SSE/WebSocket
-- **Dark mode** via CSS vars ou next-themes
 - **Animações sutis** de entrada das bolhas (Framer Motion)
 
 ### Robustez
@@ -238,11 +232,8 @@ da árvore continuam aparecendo.
 - **i18n** estrutural (strings hardcoded em pt-BR hoje)
 
 ### Real-time
-- **SSE no Lambda**: trocar o endpoint pra Lambda Function URL com
-  `InvokeMode: RESPONSE_STREAM` (response streaming, liberado em 2023) —
-  aí o `text/event-stream` flui em prod e o cliente nem precisa mudar.
-- **WebSocket** se eventualmente precisar de canal bidirecional contínuo
-  (ex.: typing indicator, presence, read receipts em massa).
+- **SSE ou WebSocket** quando o backend expuser. A camada de queries já está
+  pronta — basta um hook que escute o stream e chame `queryClient.setQueryData`.
 
 ### Testes
 - **Unit**: `format.ts`, hooks via RTL + MSW
